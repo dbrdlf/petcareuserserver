@@ -10,16 +10,19 @@ import java.util.List;
 
 @Getter
 @Setter
+@EqualsAndHashCode(of = "email")
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class CustomerDto {
-    private Long id;
+@NoArgsConstructor
+public class CustomerParam {
     private String email;
     private String name;
     private String phoneNumber;
+    private String password;
     private Integer age;
-    private List<Address> addressList = new ArrayList<>();
-    private List<CardAccount> cardAccountList = new ArrayList<>();
-    private List<Pet> petList = new ArrayList<>();
+    private AddressParam addressParam;
+    @Builder.Default
+    private List<CardAccountParam> cardAccountList = new ArrayList<>();
+    @Builder.Default
+    private List<PetParam> petList = new ArrayList<>();
 }

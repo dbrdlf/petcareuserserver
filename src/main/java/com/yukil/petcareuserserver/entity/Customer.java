@@ -23,17 +23,25 @@ public class Customer {
     private String phoneNumber;
     private Integer age;
 
-    @OneToMany(mappedBy = "customer")
-    @Builder.Default
-    private List<Address> addressList = new ArrayList<>();
-    @OneToMany(mappedBy = "customer")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
+    private Address address;
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @Builder.Default
     private List<CardAccount> cardAccountList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Pet> petList = new ArrayList<>();
 
+
+    public void addCardAccount(CardAccount cardAccount) {
+        cardAccountList.add(cardAccount);
+    }
+
+    public void addPet(Pet pet) {
+        petList.add(pet);
+    }
 
 
 }

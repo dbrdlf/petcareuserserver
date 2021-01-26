@@ -18,12 +18,8 @@ public class Address {
     private String city;
     private String street;
     private Integer zipcode;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
+    @OneToOne(mappedBy = "address", fetch = FetchType.LAZY)
     private Customer customer;
 
-    public void saveCustomer(Customer customer){
-        this.customer = customer;
-        customer.getAddressList().add(this);
-    }
+
 }

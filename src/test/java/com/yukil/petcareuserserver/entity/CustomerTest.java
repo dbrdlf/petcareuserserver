@@ -44,7 +44,7 @@ class CustomerTest {
         CardAccount cardAccount = createCardAccount(customer);
         Address address = createAddress(customer);
         assertThat(customer.getName()).isEqualTo("yukil");
-        assertThat(customer.getAddressList().get(0).getCity()).isEqualTo("seoul");
+        assertThat(customer.getAddress().getCity()).isEqualTo("seoul");
         assertThat(cardAccount.getVendor()).isEqualTo(Vendor.KB);
         assertThat(address.getCity()).isEqualTo("seoul");
         assertThat(address.getZipcode()).isEqualTo(07770);
@@ -58,7 +58,6 @@ class CustomerTest {
                                  .zipcode(07770)
                                  .customer(customer)
                                  .build();
-        address.saveCustomer(customer);
         return addressRepository.save(address);
     }
 
