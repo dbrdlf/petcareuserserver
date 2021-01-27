@@ -20,9 +20,9 @@ public class CustomerParam {
     private String phoneNumber;
     private String password;
     private Integer age;
-    private AddressParam addressParam;
-    @Builder.Default
-    private List<CardAccountParam> cardAccountList = new ArrayList<>();
-    @Builder.Default
-    private List<PetParam> petList = new ArrayList<>();
+//    private AddressParam addressParam;
+//    @Builder.Default
+//    private List<CardAccountParam> cardAccountList = new ArrayList<>();
+//    @Builder.Default
+//    private List<PetParam> petList = new ArrayList<>();
 }

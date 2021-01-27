@@ -19,7 +19,7 @@ public class CustomerDto {
     private String name;
     private String phoneNumber;
     private Integer age;
-    private List<Address> addressList = new ArrayList<>();
+    private Address address;
     private List<CardAccount> cardAccountList = new ArrayList<>();
     private List<Pet> petList = new ArrayList<>();
 }

@@ -14,8 +14,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -37,11 +36,13 @@ public class CustomerController {
         CustomerDto customerDto = customerService.createCustomer(customerParam);
         WebMvcLinkBuilder selfLinkBuilder = linkTo(CustomerController.class).slash(customerDto.getId());
         URI uri = selfLinkBuilder.toUri();
-        EntityModel customerResource = EntityModel.of(customerDto);
+        ResponseMessage responseMessage = new ResponseMessage(customerDto);
+        EntityModel customerResource = EntityModel.of(responseMessage);
+        customerResource.add(linkTo(methodOn(CustomerController.class).createCustomer(customerParam, errors)).withSelfRel());
         customerResource.add(selfLinkBuilder.withRel("update-customer"));
         customerResource.add(selfLinkBuilder.withRel("delete-customer"));
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
-        customerResource.add(Link.of("docs/index.html#resources-customer-create", "profile"));
+        customerResource.add(Link.of("docs/index.html#resources-create-customer", "profile"));
         return ResponseEntity.created(uri).body(customerResource);
     }
 
@@ -55,13 +56,12 @@ public class CustomerController {
         if (addressDto == null) {
             return ResponseEntity.badRequest().build();
         }
-        EntityModel customerResource = EntityModel.of(addressDto);
+        ResponseMessage responseMessage = new ResponseMessage(addressDto);
+        EntityModel customerResource = EntityModel.of(responseMessage);
         customerResource.add(linkTo(methodOn(CustomerController.class).addAddress(customerId, addressParam, errors)).withSelfRel());
-        customerResource.add(linkTo(methodOn(CustomerController.class).changeAddress(customerId, addressDto.getId(), addressParam, errors)).withSelfRel());
-        customerResource.add(linkTo(methodOn(CustomerController.class).addAddress(customerId, addressParam, errors)).withRel("delete-address"));
+        customerResource.add(linkTo(methodOn(CustomerController.class).deleteAddress(customerId, addressDto.getId())).withRel("delete-address"));
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
         customerResource.add(Link.of("docs/index.html#resources-address-create", "profile"));
-
         return ResponseEntity.ok(customerResource);
     }
 
@@ -90,8 +90,6 @@ public class CustomerController {
                                         @PathVariable("addressId") Long addressId) {
         Long deleteAddress = customerService.deleteAddress(addressId);
         EntityModel customerResource = EntityModel.of(deleteAddress);
-//        customerResource.add(linkTo(methodOn(CustomerController.class).addAddress(customerId, new AddressParam(), new Errors())).withRel("create-address"));
-//        customerResource.add(linkTo(methodOn(CustomerController.class).deleteAddress(customerId, addressId, errors)).withSelfRel());
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
         customerResource.add(Link.of("docs/index.html#resources-address-delete", "profile"));
         ResponseMessage<Long> responseMessage = new ResponseMessage<>(deleteAddress);

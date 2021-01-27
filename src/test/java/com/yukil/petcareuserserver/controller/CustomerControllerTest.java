@@ -96,15 +96,6 @@ class CustomerControllerTest {
                ))
         ;
     }
-    private Customer createCustomer() {
-        Customer customer = Customer.builder()
-                                    .name("yukil")
-                                    .email("dbrdlf61@gmail.com")
-                                    .password("pass")
-                                    .phoneNumber("010-1234-1234")
-                                    .build();
-        return customerRepository.save(customer);
-    }
 
     @Test
     @DisplayName("사용자 추가")
@@ -121,8 +112,44 @@ class CustomerControllerTest {
                 .accept(MediaTypes.HAL_JSON)
                 .content(objectMapper.writeValueAsString(customerParam))
         ).andDo(print())
-        .andExpect(status().isCreated())
+                .andExpect(status().isCreated())
+                .andDo(document("create-customer",
+                        links(linkWithRel("self").description("link to self"),
+                                linkWithRel("update-customer").description("link to udpate-customer"),
+                                linkWithRel("delete-customer").description("link to delete-customer"),
+                                linkWithRel("query-customers").description("link to query-customers"),
+                                linkWithRel("profile").description("link to profile")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        requestFields(
+                                fieldWithPath("name").description("customer name"),
+                                fieldWithPath("email").description("customer email"),
+                                fieldWithPath("age").description("customer age"),
+                                fieldWithPath("password").description("customer password"),
+                                fieldWithPath("phoneNumber").description("customer phoneNumber")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("id of customer"),
+                                fieldWithPath("email").description("email of customer"),
+                                fieldWithPath("name").description("name of customer"),
+                                fieldWithPath("phoneNumber").description("phone number of customer"),
+                                fieldWithPath("age").description("age of customer"),
+                                fieldWithPath("address").description("고객의 주소"),
+                                fieldWithPath("cardAccountList").description("고객의 신용카드 리스트. 여러카드를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                                fieldWithPath("petList").description("고객의 반려동물 리스트. 여러마리를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                                fieldWithPath("_links.self.href").description("link to self"),
+                                fieldWithPath("_links.update-customer.href").description("link to update customer"),
+                                fieldWithPath("_links.delete-customer.href").description("link to delete customer")
+                        )
+                ))
         ;
+
     }
 
     @Test
@@ -179,7 +206,12 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andDo(print())
-                ;
+//                .andExpect(document("address-delete",
+//                        links(linkWithRel("self").description("link to self"),
+//                                linkWithRel("self").description("link to self")
+//                                )
+//                        ))
+        ;
     }
 
     private Address createAddress(Customer customer) {
@@ -249,5 +281,13 @@ class CustomerControllerTest {
                 .andExpect(status().isOk());
     }
 
-
+    private Customer createCustomer() {
+        Customer customer = Customer.builder()
+                .name("yukil")
+                .email("dbrdlf61@gmail.com")
+                .password("pass")
+                .phoneNumber("010-1234-1234")
+                .build();
+        return customerRepository.save(customer);
+    }
 }
