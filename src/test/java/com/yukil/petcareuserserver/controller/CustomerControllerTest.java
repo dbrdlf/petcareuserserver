@@ -1,11 +1,13 @@
 package com.yukil.petcareuserserver.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yukil.petcareuserserver.dto.AddressParam;
 import com.yukil.petcareuserserver.dto.CardAccountParam;
 import com.yukil.petcareuserserver.dto.CustomerParam;
 import com.yukil.petcareuserserver.dto.PetParam;
 import com.yukil.petcareuserserver.entity.*;
+import com.yukil.petcareuserserver.repository.AddressRepository;
 import com.yukil.petcareuserserver.repository.CustomerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.hateoas.TemplateVariable.requestParameter;
@@ -45,6 +48,8 @@ class CustomerControllerTest {
     MockMvc mockMvc;
     @Autowired
     CustomerRepository customerRepository;
+    @Autowired
+    AddressRepository addressRepository;
     @Autowired
     ObjectMapper objectMapper;
     @Autowired
@@ -144,6 +149,52 @@ class CustomerControllerTest {
     }
 
     @Test
+    @DisplayName("사용자 주소 수정")
+    public void changeCustomerAddress() throws Exception {
+        //given
+        Customer customer = createCustomer();
+        Address address = createAddress(customer);
+        //when
+        AddressParam addressParam = AddressParam.builder()
+                .city("busan")
+                .street("haeundae")
+                .zipcode(12345)
+                .build();
+        //then
+        mockMvc.perform(put("/api/customer/{id}/address/{addressId}", customer.getId(), address.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addressParam))
+        ).andExpect(status().isOk())
+                .andDo(print())
+                ;
+    }
+    @Test
+    @DisplayName("사용자 주소 삭제")
+    public void deleteCustomerAddress() throws Exception {
+        Customer customer = createCustomer();
+        Address address = createAddress(customer);
+        mockMvc.perform(delete("/api/customer/{id}/address/{addressId}", customer.getId(), address.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk())
+                .andDo(print())
+                ;
+    }
+
+    private Address createAddress(Customer customer) {
+        Address address = Address.builder()
+                .customer(customer)
+                .city("seoul")
+                .street("komdalae")
+                .zipcode(07770)
+                .build();
+        return addressRepository.save(address);
+
+    }
+
+
+    @Test
     @DisplayName("사용자 카드정보 추가")
     public void addCustomerCardAccount() throws Exception {
         //given
@@ -153,14 +204,22 @@ class CustomerControllerTest {
                                                   .cardNumber("1234-1234-1234-1234")
                                                   .vendor(Vendor.KB)
                                                   .ownerName("yukil")
-                                                  .customerParam(modelMapper.map(customer, CustomerParam.class))
                                                   .build();
+        CardAccountParam cardAccountParam2 = CardAccountParam.builder()
+                                                  .cardNumber("4321-4321-4321-4321")
+                                                  .vendor(Vendor.SHINHAN)
+                                                  .ownerName("yukil")
+                                                  .build();
+
+        List<CardAccountParam> cardList = Arrays.asList(cardAccountParam, cardAccountParam2);
         //then
         mockMvc.perform(put("/api/customer/{id}/card", customer.getId())
                 .accept(MediaTypes.HAL_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(cardAccountParam))
-        ).andExpect(status().isOk());
+                .content(objectMapper.writeValueAsString(cardList))
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -173,14 +232,21 @@ class CustomerControllerTest {
                           .petType(PetType.CAT)
                           .name("moong-chi")
                           .age(2)
-                          .customer(customer)
                           .build();
+        PetParam petParam2 = PetParam.builder()
+                          .petType(PetType.DOG)
+                          .name("daeng-daeng")
+                          .age(1)
+                          .build();
+        List<PetParam> petParamList = Arrays.asList(petParam, petParam2);
         //then
         mockMvc.perform(put("/api/customer/{id}/pet", customer.getId())
                 .accept(MediaTypes.HAL_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(petParam))
-        ).andExpect(status().isOk());
+                .content(objectMapper.writeValueAsString(petParamList))
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 
 

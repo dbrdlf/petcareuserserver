@@ -14,7 +14,6 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Builder
 public class PetParam {
-    private Customer customer;
     private String name;
     private PetType petType;
     private Integer age;
