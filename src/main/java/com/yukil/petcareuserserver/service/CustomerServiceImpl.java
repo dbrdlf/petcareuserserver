@@ -11,6 +11,8 @@ import com.yukil.petcareuserserver.repository.CustomerRepository;
 import com.yukil.petcareuserserver.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -131,5 +133,58 @@ public class CustomerServiceImpl implements CustomerService{
         }
         addressRepository.delete(optionalAddress.get());
         return addressId;
+    }
+
+    @Override
+    public CardAccountDto changeCard(Long cardId, CardAccountParam cardAccountParam) {
+        Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
+        if (!optionalCardAccount.isPresent()) {
+            return null;
+        }
+
+        CardAccount cardAccount = optionalCardAccount.get();
+        cardAccount.setCardNumber(cardAccountParam.getCardNumber());
+        cardAccount.setVendor(cardAccountParam.getVendor());
+        cardAccount.setOwnerName(cardAccountParam.getOwnerName());
+        return modelMapper.map(cardAccount, CardAccountDto.class);
+    }
+
+    @Override
+    public Long deleteCard(Long cardId) {
+        Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
+        if (!optionalCardAccount.isPresent()) {
+            return null;
+        }
+        cardAccountRepository.delete(optionalCardAccount.get());
+        return cardId;
+    }
+
+    @Override
+    public PetDto changePet(Long petId, PetParam petParam) {
+        Optional<Pet> optionalPet = petRepository.findById(petId);
+        if (!optionalPet.isPresent()) {
+            return null;
+        }
+
+        Pet pet = optionalPet.get();
+        pet.setPetType(petParam.getPetType());
+        pet.setAge(petParam.getAge());
+        pet.setName(petParam.getName());
+        return modelMapper.map(pet, PetDto.class);
+    }
+
+    @Override
+    public Long deletePet(Long petId) {
+        Optional<Pet> optionalPet = petRepository.findById(petId);
+        if (!optionalPet.isPresent()) {
+            return null;
+        }
+        petRepository.delete(optionalPet.get());
+        return petId;
+    }
+
+    @Override
+    public Page<CustomerDto> queryCustomers(Pageable pageable, CustomerParam customerParam) {
+        return null;
     }
 }

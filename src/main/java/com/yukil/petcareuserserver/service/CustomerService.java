@@ -2,6 +2,8 @@ package com.yukil.petcareuserserver.service;
 
 import com.yukil.petcareuserserver.dto.*;
 import com.yukil.petcareuserserver.entity.Customer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -21,4 +23,14 @@ public interface CustomerService {
     AddressDto changeAddress(Long addressId, AddressParam addressParam);
 
     Long deleteAddress(Long addressId);
+
+    CardAccountDto changeCard(Long cardId, CardAccountParam cardAccountParam);
+
+    Long deleteCard(Long cardId);
+
+    PetDto changePet(Long petId, PetParam petParam);
+
+    Long deletePet(Long petId);
+
+    Page<CustomerDto> queryCustomers(Pageable pageable, CustomerParam customerParam);
 }

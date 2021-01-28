@@ -2,8 +2,12 @@ package com.yukil.petcareuserserver.controller;
 
 import com.yukil.petcareuserserver.common.ResponseMessage;
 import com.yukil.petcareuserserver.dto.*;
+import com.yukil.petcareuserserver.entity.Pet;
 import com.yukil.petcareuserserver.service.CustomerService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -14,6 +18,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,26 +79,28 @@ public class CustomerController {
             return ResponseEntity.badRequest().build();
         }
         AddressDto addressDto = customerService.changeAddress(addressId, addressParam);
-        EntityModel customerResource = EntityModel.of(addressDto);
+        ResponseMessage<EntityModel> message = new ResponseMessage(addressDto);
+        EntityModel customerResource = EntityModel.of(message);
         customerResource.add(linkTo(methodOn(CustomerController.class).addAddress(customerId, addressParam, errors)).withRel("create-address"));
         customerResource.add(linkTo(methodOn(CustomerController.class).changeAddress(customerId, addressId, addressParam, errors)).withSelfRel());
-        customerResource.add(linkTo(methodOn(CustomerController.class).addAddress(customerId, addressParam, errors)).withRel("delete-address"));
+        customerResource.add(linkTo(methodOn(CustomerController.class).deleteAddress(customerId, addressId)).withRel("delete-address"));
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
-        customerResource.add(Link.of("docs/index.html#resources-address-update", "profile"));
-        ResponseMessage<EntityModel> message = new ResponseMessage(customerResource);
+        customerResource.add(Link.of("docs/index.html#resources-update-address", "profile"));
 
-        return ResponseEntity.ok(message);
+
+        return ResponseEntity.ok(customerResource);
     }
 
     @DeleteMapping("/{id}/address/{addressId}")
     public ResponseEntity deleteAddress(@PathVariable("id") Long customerId,
                                         @PathVariable("addressId") Long addressId) {
         Long deleteAddress = customerService.deleteAddress(addressId);
-        EntityModel customerResource = EntityModel.of(deleteAddress);
-        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
-        customerResource.add(Link.of("docs/index.html#resources-address-delete", "profile"));
         ResponseMessage<Long> responseMessage = new ResponseMessage<>(deleteAddress);
-        return ResponseEntity.ok(responseMessage);
+        EntityModel customerResource = EntityModel.of(responseMessage);
+        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
+        customerResource.add(Link.of("docs/index.html#resources-delete-address", "profile"));
+
+        return ResponseEntity.ok(customerResource);
     }
 
     @PutMapping("/{id}/card")
@@ -105,16 +112,18 @@ public class CustomerController {
         if (cardAccountDto == null) {
             return ResponseEntity.badRequest().build();
         }
+
         List<EntityModel> customerResources = cardAccountDto.stream().map(c -> {
                     EntityModel<CardAccountDto> entityModel = EntityModel.of(c);
                     entityModel.add(linkTo(methodOn(CustomerController.class).addCard(customerId, cardAccountParam, errors)).withSelfRel());
                     entityModel.add(linkTo(methodOn(CustomerController.class).changeCard(customerId, c.getId(), new CardAccountParam(), errors)).withRel("update-card"));
-                    entityModel.add(linkTo(methodOn(CustomerController.class).deleteCard(customerId, c.getId(), errors)).withRel("delete-card"));
+                    entityModel.add(linkTo(methodOn(CustomerController.class).deleteCard(customerId, c.getId())).withRel("delete-card"));
                     return entityModel;
                 }
         ).collect(Collectors.toList());
-        return ResponseEntity.ok().body(CollectionModel.of(customerResources)
-                .add(Link.of("docs/index.html#resources-card-create", "profile"))
+        ResponseMessage responseMessage = new ResponseMessage(customerResources);
+        return ResponseEntity.ok().body(CollectionModel.of(responseMessage)
+                .add(Link.of("docs/index.html#resources-create-card", "profile"))
                 .add(linkTo(CustomerController.class).withRel("query-customers"))
         );
     }
@@ -125,15 +134,28 @@ public class CustomerController {
                                      @RequestBody CardAccountParam cardAccountParam,
                                      Errors errors) {
 
-        return ResponseEntity.ok(cardId);
+        CardAccountDto cardAccountDto = customerService.changeCard(cardId, cardAccountParam);
+
+        ResponseMessage<EntityModel> message = new ResponseMessage(cardAccountDto);
+        EntityModel customerResource = EntityModel.of(message);
+        customerResource.add(linkTo(methodOn(CustomerController.class).addCard(customerId, Arrays.asList(cardAccountParam), errors)).withRel("create-card"));
+        customerResource.add(linkTo(methodOn(CustomerController.class).changeCard(customerId, cardId, cardAccountParam, errors)).withSelfRel());
+        customerResource.add(linkTo(methodOn(CustomerController.class).deleteCard(customerId, cardId)).withRel("delete-card"));
+        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
+        customerResource.add(Link.of("docs/index.html#resources-update-card", "profile"));
+        return ResponseEntity.ok(customerResource);
     }
 
     @DeleteMapping("/{id}/card/{cardId}")
     public ResponseEntity deleteCard(@PathVariable("id") Long customerId,
-                                     @PathVariable("cardId") Long cardId,
-                                     Errors errors){
-
-        return ResponseEntity.ok(cardId);
+                                     @PathVariable("cardId") Long cardId
+                                     ){
+        Long deletedCardId = customerService.deleteCard(cardId);
+        ResponseMessage<Long> responseMessage = new ResponseMessage<>(deletedCardId);
+        EntityModel customerResource = EntityModel.of(responseMessage);
+        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
+        customerResource.add(Link.of("docs/index.html#resources-delete-address", "profile"));
+        return ResponseEntity.ok(customerResource);
     }
 
 
@@ -143,13 +165,44 @@ public class CustomerController {
             return ResponseEntity.badRequest().build();
         }
         List<PetDto> petDtos = customerService.addPet(petParam, customerId);
-        EntityModel customerResource = EntityModel.of(petDtos);
+        ResponseMessage message = new ResponseMessage(petDtos);
+        EntityModel customerResource = EntityModel.of(message);
         customerResource.add(linkTo(methodOn(CustomerController.class).addPet(customerId, petParam, errors)).withSelfRel());
         customerResource.add(linkTo(methodOn(CustomerController.class).addPet(customerId, petParam, errors)).withRel("update-pet"));
         customerResource.add(linkTo(methodOn(CustomerController.class).addPet(customerId, petParam, errors)).withRel("delete-pet"));
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
         customerResource.add(Link.of("docs/index.html#resources-pet-create", "profile"));
-        return ResponseEntity.ok(petDtos);
+        return ResponseEntity.ok(customerResource);
+    }
+
+    @PutMapping("/{id}/pet/{petId}")
+    public ResponseEntity changePet(@PathVariable("id") Long customerId,
+                                     @PathVariable("petId") Long petId,
+                                     @RequestBody PetParam petParam,
+                                     Errors errors) {
+
+        PetDto petDto = customerService.changePet(petId, petParam);
+
+        ResponseMessage<EntityModel> message = new ResponseMessage(petDto);
+        EntityModel customerResource = EntityModel.of(message);
+        customerResource.add(linkTo(methodOn(CustomerController.class).addPet(customerId, Arrays.asList(petParam), errors)).withRel("create-card"));
+        customerResource.add(linkTo(methodOn(CustomerController.class).changePet(customerId, petId, petParam, errors)).withSelfRel());
+        customerResource.add(linkTo(methodOn(CustomerController.class).deletePet(customerId, petId)).withRel("delete-card"));
+        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
+        customerResource.add(Link.of("docs/index.html#resources-update-card", "profile"));
+        return ResponseEntity.ok(customerResource);
+    }
+
+    @DeleteMapping("/{id}/pet/{petId}")
+    public ResponseEntity deletePet(@PathVariable("id") Long customerId,
+                                     @PathVariable("petId") Long petId
+    ){
+        Long deletedPetId = customerService.deletePet(petId);
+        ResponseMessage<Long> responseMessage = new ResponseMessage<>(deletedPetId);
+        EntityModel customerResource = EntityModel.of(responseMessage);
+        customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
+        customerResource.add(Link.of("docs/index.html#resources-delete-pet", "profile"));
+        return ResponseEntity.ok(customerResource);
     }
 
     @GetMapping("/{id}")
@@ -159,12 +212,19 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
         WebMvcLinkBuilder selfLink = linkTo(CustomerController.class).slash(customerDto.getId());
-        EntityModel customerModel = EntityModel.of(customerDto);
+        ResponseMessage responseMessage = new ResponseMessage<>(customerDto);
+        EntityModel customerModel = EntityModel.of(responseMessage);
         customerModel.add(selfLink.withRel("self"));
         customerModel.add(selfLink.withRel("update-customer"));
         customerModel.add(selfLink.withRel("delete-customer"));
 
 //        CustomerResource customerResource = CustomerResource.of(customerDto);
         return ResponseEntity.ok(customerModel);
+    }
+
+    @GetMapping
+    public ResponseEntity queryCustomers(Pageable pageable, @RequestBody CustomerParam customerParam) {
+        Page<CustomerDto> customerDtoPage = customerService.queryCustomers(pageable, customerParam);
+        return ResponseEntity.ok(customerDtoPage);
     }
 }

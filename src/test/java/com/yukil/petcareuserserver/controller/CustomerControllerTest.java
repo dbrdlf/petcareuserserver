@@ -8,7 +8,9 @@ import com.yukil.petcareuserserver.dto.CustomerParam;
 import com.yukil.petcareuserserver.dto.PetParam;
 import com.yukil.petcareuserserver.entity.*;
 import com.yukil.petcareuserserver.repository.AddressRepository;
+import com.yukil.petcareuserserver.repository.CardAccountRepository;
 import com.yukil.petcareuserserver.repository.CustomerRepository;
+import com.yukil.petcareuserserver.repository.PetRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -50,6 +52,10 @@ class CustomerControllerTest {
     CustomerRepository customerRepository;
     @Autowired
     AddressRepository addressRepository;
+    @Autowired
+    CardAccountRepository cardAccountRepository;
+    @Autowired
+    PetRepository petRepository;
     @Autowired
     ObjectMapper objectMapper;
     @Autowired
@@ -214,16 +220,7 @@ class CustomerControllerTest {
         ;
     }
 
-    private Address createAddress(Customer customer) {
-        Address address = Address.builder()
-                .customer(customer)
-                .city("seoul")
-                .street("komdalae")
-                .zipcode(07770)
-                .build();
-        return addressRepository.save(address);
 
-    }
 
 
     @Test
@@ -252,6 +249,87 @@ class CustomerControllerTest {
         )
                 .andDo(print())
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("카드 정보 수정")
+    public void changeCustomerCardAccount() throws Exception {
+        //given
+        Customer customer = createCustomer();
+        CardAccount cardAccount = createCardAccount(customer);
+        //when
+        CardAccountParam cardAccountParam = CardAccountParam.builder()
+                .cardNumber("4444-5555-6666-7777")
+                .ownerName("yukil")
+                .vendor(Vendor.SHINHAN)
+                .build();
+        //then
+        mockMvc.perform(put("/api/customer/{id}/card/{cardId}", customer.getId(), cardAccount.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cardAccountParam))
+        ).andExpect(status().isOk())
+                .andDo(print())
+        ;
+    }
+
+    @Test
+    @DisplayName("카드 정보 삭제")
+    public void deleteCustomerCardAccount() throws Exception {
+        Customer customer = createCustomer();
+        CardAccount cardAccount = createCardAccount(customer);
+        mockMvc.perform(delete("/api/customer/{id}/card/{cardId}", customer.getId(), cardAccount.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk())
+                .andDo(print())
+//                .andExpect(document("address-delete",
+//                        links(linkWithRel("self").description("link to self"),
+//                                linkWithRel("self").description("link to self")
+//                                )
+//                        ))
+        ;
+    }
+
+    @Test
+    @DisplayName("반려동물 정보 수정")
+    public void changeCustomerPet() throws Exception {
+        //given
+        Customer customer = createCustomer();
+        Pet pet = createPet(customer);
+        //when
+        PetParam petParam = PetParam.builder()
+                .age(3)
+                .name("asdf")
+                .petType(PetType.CAT)
+                .build();
+        //then
+        mockMvc.perform(put("/api/customer/{id}/pet/{petId}", customer.getId(), pet.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(petParam))
+        ).andExpect(status().isOk())
+                .andDo(print())
+        ;
+    }
+
+    @Test
+    @DisplayName("반려동물 정보 삭제")
+    public void deleteCustomerPet() throws Exception {
+        Customer customer = createCustomer();
+        Pet pet = createPet(customer);
+
+        mockMvc.perform(delete("/api/customer/{id}/pet/{petId}", customer.getId(), pet.getId())
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk())
+                .andDo(print())
+//                .andExpect(document("address-delete",
+//                        links(linkWithRel("self").description("link to self"),
+//                                linkWithRel("self").description("link to self")
+//                                )
+//                        ))
+        ;
     }
 
     @Test
@@ -289,5 +367,35 @@ class CustomerControllerTest {
                 .phoneNumber("010-1234-1234")
                 .build();
         return customerRepository.save(customer);
+    }
+
+    private Address createAddress(Customer customer) {
+        Address address = Address.builder()
+                .customer(customer)
+                .city("seoul")
+                .street("komdalae")
+                .zipcode(07770)
+                .build();
+        return addressRepository.save(address);
+    }
+
+    private CardAccount createCardAccount(Customer customer) {
+        CardAccount cardAccount = CardAccount.builder()
+                .customer(customer)
+                .vendor(Vendor.KB)
+                .ownerName("yukil")
+                .cardNumber("1234-1234-1234-1234")
+                .build();
+        return cardAccountRepository.save(cardAccount);
+    }
+
+    private Pet createPet(Customer customer) {
+        Pet pet = Pet.builder()
+                .age(2)
+                .customer(customer)
+                .petType(PetType.CAT)
+                .name("moong-chi")
+                .build();
+        return petRepository.save(pet);
     }
 }
