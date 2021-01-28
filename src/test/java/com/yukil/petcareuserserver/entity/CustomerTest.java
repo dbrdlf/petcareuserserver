@@ -44,7 +44,6 @@ class CustomerTest {
         CardAccount cardAccount = createCardAccount(customer);
         Address address = createAddress(customer);
         assertThat(customer.getName()).isEqualTo("yukil");
-        assertThat(customer.getAddress().getCity()).isEqualTo("seoul");
         assertThat(cardAccount.getVendor()).isEqualTo(Vendor.KB);
         assertThat(address.getCity()).isEqualTo("seoul");
         assertThat(address.getZipcode()).isEqualTo(07770);

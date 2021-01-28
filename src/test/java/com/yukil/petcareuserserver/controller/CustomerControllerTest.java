@@ -2,6 +2,7 @@ package com.yukil.petcareuserserver.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yukil.petcareuserserver.config.RestDocsConfiguration;
 import com.yukil.petcareuserserver.dto.AddressParam;
 import com.yukil.petcareuserserver.dto.CardAccountParam;
 import com.yukil.petcareuserserver.dto.CustomerParam;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -45,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @AutoConfigureRestDocs
+@Import(RestDocsConfiguration.class)
 class CustomerControllerTest {
     @Autowired
     MockMvc mockMvc;
@@ -87,14 +90,15 @@ class CustomerControllerTest {
                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
                        ),
                        responseFields(
-                               fieldWithPath("id").description("id of customer"),
-                               fieldWithPath("email").description("email of customer"),
-                               fieldWithPath("name").description("name of customer"),
-                               fieldWithPath("phoneNumber").description("phone number of customer"),
-                               fieldWithPath("age").description("age of customer"),
-                               fieldWithPath("addressList").description("고객의 주소 리스트. 여러군데를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
-                               fieldWithPath("cardAccountList").description("고객의 신용카드 리스트. 여러카드를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
-                               fieldWithPath("petList").description("고객의 반려동물 리스트. 여러마리를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                               fieldWithPath("data.id").description("id of customer"),
+                               fieldWithPath("data.email").description("email of customer"),
+                               fieldWithPath("data.name").description("name of customer"),
+                               fieldWithPath("data.phoneNumber").description("phone number of customer"),
+                               fieldWithPath("data.age").description("age of customer"),
+                               fieldWithPath("data.address").description("고객의 주소 리스트. 여러군데를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                               fieldWithPath("data.cardAccountList").description("고객의 신용카드 리스트. 여러카드를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                               fieldWithPath("data.petList").description("고객의 반려동물 리스트. 여러마리를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                               fieldWithPath("timestamp").description("api 호출 시간"),
                                fieldWithPath("_links.self.href").description("link to self"),
                                fieldWithPath("_links.update-customer.href").description("link to update customer"),
                                fieldWithPath("_links.delete-customer.href").description("link to delete customer")
@@ -141,17 +145,20 @@ class CustomerControllerTest {
                                 headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
                         ),
                         responseFields(
-                                fieldWithPath("id").description("id of customer"),
-                                fieldWithPath("email").description("email of customer"),
-                                fieldWithPath("name").description("name of customer"),
-                                fieldWithPath("phoneNumber").description("phone number of customer"),
-                                fieldWithPath("age").description("age of customer"),
-                                fieldWithPath("address").description("고객의 주소"),
-                                fieldWithPath("cardAccountList").description("고객의 신용카드 리스트. 여러카드를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
-                                fieldWithPath("petList").description("고객의 반려동물 리스트. 여러마리를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                                fieldWithPath("data.id").description("id of customer"),
+                                fieldWithPath("data.email").description("email of customer"),
+                                fieldWithPath("data.name").description("name of customer"),
+                                fieldWithPath("data.phoneNumber").description("phone number of customer"),
+                                fieldWithPath("data.age").description("age of customer"),
+                                fieldWithPath("data.address").description("고객의 주소"),
+                                fieldWithPath("data.cardAccountList").description("고객의 신용카드 리스트. 여러카드를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                                fieldWithPath("data.petList").description("고객의 반려동물 리스트. 여러마리를 저장해 놓고 사용 할 수 있기때문에 list로 저장"),
+                                fieldWithPath("timestamp").description("api 호출 시간"),
                                 fieldWithPath("_links.self.href").description("link to self"),
                                 fieldWithPath("_links.update-customer.href").description("link to update customer"),
-                                fieldWithPath("_links.delete-customer.href").description("link to delete customer")
+                                fieldWithPath("_links.delete-customer.href").description("link to delete customer"),
+                                fieldWithPath("_links.query-customers.href").description("link to query customers"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
                         )
                 ))
         ;
@@ -290,6 +297,23 @@ class CustomerControllerTest {
 //                        ))
         ;
     }
+    @Test
+    @DisplayName("카드 정보 삭제 실패(없는 카드 번호)")
+    public void deleteCustomerCardAccountNotFound() throws Exception {
+        Customer customer = createCustomer();
+        CardAccount cardAccount = createCardAccount(customer);
+        mockMvc.perform(delete("/api/customer/{id}/card/{cardId}", customer.getId(), 1000L)
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isNoContent())
+                .andDo(print())
+//                .andExpect(document("address-delete",
+//                        links(linkWithRel("self").description("link to self"),
+//                                linkWithRel("self").description("link to self")
+//                                )
+//                        ))
+        ;
+    }
 
     @Test
     @DisplayName("반려동물 정보 수정")
@@ -319,16 +343,48 @@ class CustomerControllerTest {
         Customer customer = createCustomer();
         Pet pet = createPet(customer);
 
-        mockMvc.perform(delete("/api/customer/{id}/pet/{petId}", customer.getId(), pet.getId())
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/customer/{id}/pet/{petId}", customer.getId(), pet.getId())
                 .accept(MediaTypes.HAL_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk())
                 .andDo(print())
-//                .andExpect(document("address-delete",
-//                        links(linkWithRel("self").description("link to self"),
-//                                linkWithRel("self").description("link to self")
-//                                )
-//                        ))
+                .andDo(document("address-delete",
+                        links(
+                                linkWithRel("query-customers").description("link to query customers"),
+                                linkWithRel("profile").description("link to query profile")
+                        ),
+                        pathParameters(
+                                parameterWithName("id").description("customer id"),
+                                parameterWithName("petId").description("pet id")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        responseFields(
+                                fieldWithPath("data").description("deleted pet id"),
+                                fieldWithPath("timestamp").description("deleted time"),
+                                fieldWithPath("_links.query-customers.href").description("link to query customers"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
+                        )
+                ))
+
+        ;
+    }
+    @Test
+    @DisplayName("반려동물 정보 삭제(없는 반려동물)")
+    public void deleteCustomerPetNotFound() throws Exception {
+        Customer customer = createCustomer();
+        Pet pet = createPet(customer);
+
+        mockMvc.perform(delete("/api/customer/{id}/pet/{petId}", customer.getId(), 1000L)
+                .accept(MediaTypes.HAL_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isNoContent())
+                .andDo(print())
         ;
     }
 

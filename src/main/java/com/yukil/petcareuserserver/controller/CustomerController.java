@@ -18,6 +18,8 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -151,6 +153,9 @@ public class CustomerController {
                                      @PathVariable("cardId") Long cardId
                                      ){
         Long deletedCardId = customerService.deleteCard(cardId);
+        if (deletedCardId == null) {
+            return ResponseEntity.noContent().build();
+        }
         ResponseMessage<Long> responseMessage = new ResponseMessage<>(deletedCardId);
         EntityModel customerResource = EntityModel.of(responseMessage);
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
@@ -198,6 +203,9 @@ public class CustomerController {
                                      @PathVariable("petId") Long petId
     ){
         Long deletedPetId = customerService.deletePet(petId);
+        if (deletedPetId == null) {
+            return ResponseEntity.noContent().build();
+        }
         ResponseMessage<Long> responseMessage = new ResponseMessage<>(deletedPetId);
         EntityModel customerResource = EntityModel.of(responseMessage);
         customerResource.add(linkTo(CustomerController.class).withRel("query-customers"));
