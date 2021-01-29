@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.hateoas.TemplateVariable.requestParameter;
@@ -139,7 +140,10 @@ class CustomerControllerTest {
                                 fieldWithPath("email").description("customer email"),
                                 fieldWithPath("age").description("customer age"),
                                 fieldWithPath("password").description("customer password"),
-                                fieldWithPath("phoneNumber").description("customer phoneNumber")
+                                fieldWithPath("phoneNumber").description("customer phone number"),
+                                fieldWithPath("addressParam").description("customer address info"),
+                                fieldWithPath("cardAccountList").description("customer card info"),
+                                fieldWithPath("petList").description("customer pet info")
                         ),
                         responseHeaders(
                                 headerWithName(HttpHeaders.CONTENT_TYPE).description("content type")
@@ -156,9 +160,9 @@ class CustomerControllerTest {
                                 fieldWithPath("timestamp").description("api 호출 시간"),
                                 fieldWithPath("_links.self.href").description("link to self"),
                                 fieldWithPath("_links.update-customer.href").description("link to update customer"),
+                                fieldWithPath("_links.query-customers.href").description("link to update customer"),
                                 fieldWithPath("_links.delete-customer.href").description("link to delete customer"),
-                                fieldWithPath("_links.query-customers.href").description("link to query customers"),
-                                fieldWithPath("_links.profile.href").description("link to profile")
+                                fieldWithPath("_links.profile.href").description("link to delete customer")
                         )
                 ))
         ;
@@ -413,6 +417,35 @@ class CustomerControllerTest {
         )
                 .andDo(print())
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("사용자 리스트 조회")
+    public void queryCustomers() throws Exception{
+        IntStream.of(1, 30).forEach(i -> createCustomer(i));
+        mockMvc.perform(get("/api/customer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .param("page", "0")
+                .param("size", "20")
+                .param("sort", "name,DESC")
+                .param("name", "yukil_1")
+        ).andDo(print())
+                .andExpect(status().isOk());
+
+    }
+
+
+
+
+    private Customer createCustomer(int i) {
+        Customer customer = Customer.builder()
+                .name("yukil_" + i)
+                .email("dbrdlf61@gmail.com")
+                .password("pass")
+                .phoneNumber("010-1234-1234")
+                .build();
+        return customerRepository.save(customer);
     }
 
     private Customer createCustomer() {

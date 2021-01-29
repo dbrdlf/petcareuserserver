@@ -24,7 +24,7 @@ public interface CustomerService {
 
     Long deleteAddress(Long addressId);
 
-    CardAccountDto changeCard(Long cardId, CardAccountParam cardAccountParam);
+    CardAccountDto changeCardAccount(Long cardId, CardAccountParam cardAccountParam);
 
     Long deleteCard(Long cardId);
 
@@ -32,5 +32,5 @@ public interface CustomerService {
 
     Long deletePet(Long petId);
 
-    Page<CustomerDto> queryCustomers(Pageable pageable, CustomerParam customerParam);
+    Page<CustomerDto> queryCustomers(Pageable pageable, CustomerSearchCondition condition);
 }

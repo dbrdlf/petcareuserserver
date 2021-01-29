@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CustomerServiceImpl implements CustomerService{
     private final CustomerRepository customerRepository;
     private final ModelMapper modelMapper;
@@ -60,7 +61,6 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    @Transactional
     public AddressDto addAddress(AddressParam param, Long customerId) {
         Address address = modelMapper.map(param, Address.class);
         Address createdAddress = addressRepository.save(address);
@@ -77,7 +77,6 @@ public class CustomerServiceImpl implements CustomerService{
         return addressDto;
     }
     @Override
-    @Transactional
     public List<CardAccountDto> addCard(List<CardAccountParam> param, Long customerId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (!optionalCustomer.isPresent()) {
@@ -111,7 +110,6 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    @Transactional
     public AddressDto changeAddress(Long addressId, AddressParam addressParam) {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
         if (!optionalAddress.isPresent()) {
@@ -133,20 +131,6 @@ public class CustomerServiceImpl implements CustomerService{
         }
         addressRepository.delete(optionalAddress.get());
         return addressId;
-    }
-
-    @Override
-    public CardAccountDto changeCard(Long cardId, CardAccountParam cardAccountParam) {
-        Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
-        if (!optionalCardAccount.isPresent()) {
-            return null;
-        }
-
-        CardAccount cardAccount = optionalCardAccount.get();
-        cardAccount.setCardNumber(cardAccountParam.getCardNumber());
-        cardAccount.setVendor(cardAccountParam.getVendor());
-        cardAccount.setOwnerName(cardAccountParam.getOwnerName());
-        return modelMapper.map(cardAccount, CardAccountDto.class);
     }
 
     @Override
@@ -184,7 +168,21 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public Page<CustomerDto> queryCustomers(Pageable pageable, CustomerParam customerParam) {
-        return null;
+    public Page<CustomerDto> queryCustomers(Pageable pageable, CustomerSearchCondition condition) {
+        return customerRepository.findByCustomerParam(pageable, condition);
+    }
+
+    @Override
+    public CardAccountDto changeCardAccount(Long cardId, CardAccountParam cardAccountParam) {
+        Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
+        if (!optionalCardAccount.isPresent()) {
+            return null;
+        }
+
+        CardAccount cardAccount = optionalCardAccount.get();
+        cardAccount.setCardNumber(cardAccountParam.getCardNumber());
+        cardAccount.setVendor(cardAccountParam.getVendor());
+        cardAccount.setOwnerName(cardAccountParam.getOwnerName());
+        return modelMapper.map(cardAccount, CardAccountDto.class);
     }
 }
