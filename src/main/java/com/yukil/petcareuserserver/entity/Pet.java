@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -22,7 +23,7 @@ public class Pet {
     private String name;
     @Enumerated(EnumType.STRING)
     private PetType petType;
-    private Integer age;
+    private LocalDate birthday;
 
     public void saveCustomer(Customer customer){
         this.customer = customer;

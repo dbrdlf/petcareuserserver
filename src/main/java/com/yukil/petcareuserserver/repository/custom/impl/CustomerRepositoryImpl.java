@@ -15,12 +15,15 @@ import com.yukil.petcareuserserver.entity.QCardAccount;
 import com.yukil.petcareuserserver.entity.QPet;
 import com.yukil.petcareuserserver.repository.custom.CustomerRepositoryCustom;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.jni.Local;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +45,7 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
 //    private final ModelMapper modelMapper;
 
     @Override
-    public Page<CustomerDto> findByCustomerParam(Pageable pageable, CustomerSearchCondition condition) {
+    public Page<Customer> findByCustomerParam(Pageable pageable, CustomerSearchCondition condition) {
 
 //        JPAQuery<Customer> query = jpaQueryFactory.selectFrom(customer);
 //        List<Customer> fetch = query.fetch();
@@ -50,16 +53,7 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
 //        return PageableExecutionUtils.getPage(customerDtos, pageable, query::fetchCount);
 
         return applyPagination(pageable, query -> query
-                .select(Projections.bean(CustomerDto.class,
-                        customer.id,
-                        customer.email,
-                        customer.name,
-                        customer.age,
-                        customer.address,
-                        customer.phoneNumber
-//                        customer.cardAccountList,
-//                        customer.petList
-                )).from(customer)
+                .selectFrom(customer)
                 .leftJoin(customer.address, address)
                 .leftJoin(customer.cardAccountList, cardAccount)
                 .leftJoin(customer.petList, pet)
@@ -72,11 +66,11 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
     }
 
     private BooleanExpression ageLoe(Integer ageLoe) {
-        return ageLoe == null ? null : customer.age.loe(ageLoe);
+        return ageLoe == null ? null : customer.birthday.loe(getBirthday(ageLoe));
     }
 
     private BooleanExpression ageGoe(Integer ageGoe) {
-        return ageGoe == null ? null : customer.age.goe(ageGoe);
+        return ageGoe == null ? null : customer.birthday.goe(getBirthday(ageGoe));
     }
 
     private BooleanExpression nameEq(String name) {
@@ -85,5 +79,17 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
 
     private BooleanExpression emailEq(String email) {
         return hasText(email) ? customer.email.eq(email) : null;
+    }
+
+    private Integer getAge(LocalDate birthday) {
+        if (birthday == null) {
+            return 0;
+        }
+        Period period = birthday.until(LocalDate.now());
+        return period.getYears();
+    }
+
+    private LocalDate getBirthday(Integer age) {
+        return LocalDate.of(LocalDate.now().getYear() - age, LocalDate.now().getMonth(), LocalDate.now().getDayOfMonth());
     }
 }

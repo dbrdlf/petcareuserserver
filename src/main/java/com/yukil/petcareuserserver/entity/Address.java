@@ -18,8 +18,12 @@ public class Address {
     private String city;
     private String street;
     private Integer zipcode;
-    @OneToOne(mappedBy = "address", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "address", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Customer customer;
 
 
+    public void saveCustomer(Customer customer) {
+        this.customer = customer;
+        customer.setAddress(this);
+    }
 }

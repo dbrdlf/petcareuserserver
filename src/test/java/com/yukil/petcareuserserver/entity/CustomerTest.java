@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ class CustomerTest {
     }
     @Test
     @DisplayName("사용자 생성 테스트")
+    @Transactional
     public void customerSave() throws Exception {
 
         Customer customer = createCustomer();
@@ -45,8 +47,10 @@ class CustomerTest {
         Address address = createAddress(customer);
         assertThat(customer.getName()).isEqualTo("yukil");
         assertThat(cardAccount.getVendor()).isEqualTo(Vendor.KB);
+        assertThat(customer.getAddress().getCity()).isEqualTo("seoul");
         assertThat(address.getCity()).isEqualTo("seoul");
         assertThat(address.getZipcode()).isEqualTo(07770);
+
 
     }
 
@@ -57,6 +61,7 @@ class CustomerTest {
                                  .zipcode(07770)
                                  .customer(customer)
                                  .build();
+        address.saveCustomer(customer);
         return addressRepository.save(address);
     }
 

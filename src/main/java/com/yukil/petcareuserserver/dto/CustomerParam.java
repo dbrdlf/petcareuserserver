@@ -5,6 +5,7 @@ import com.yukil.petcareuserserver.entity.CardAccount;
 import com.yukil.petcareuserserver.entity.Pet;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class CustomerParam {
     private String name;
     private String phoneNumber;
     private String password;
-    private Integer age;
+    private LocalDate birthday;
     private AddressParam addressParam;
     @Builder.Default
     private List<CardAccountParam> cardAccountList = new ArrayList<>();

@@ -3,6 +3,7 @@ package com.yukil.petcareuserserver.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class Customer {
     private String password;
     private String name;
     private String phoneNumber;
-    private Integer age;
+    private LocalDate birthday;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
@@ -36,10 +37,12 @@ public class Customer {
 
 
     public void addCardAccount(CardAccount cardAccount) {
+        cardAccount.setCustomer(this);
         cardAccountList.add(cardAccount);
     }
 
     public void addPet(Pet pet) {
+        pet.setCustomer(this);
         petList.add(pet);
     }
 

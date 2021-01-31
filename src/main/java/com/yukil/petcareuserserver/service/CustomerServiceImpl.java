@@ -31,65 +31,87 @@ public class CustomerServiceImpl implements CustomerService{
     private final PetRepository petRepository;
 
     @Override
-    public CustomerDto getCustomer(Long id) {
+    public Customer getCustomer(Long id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
+        if (!optionalCustomer.isPresent()) {
+            return null;
+        }
+        return  optionalCustomer.get();
+    }
+
+    @Override
+    public Address getAddress(Long id) {
+        Optional<Address> optionalAddress = addressRepository.findById(id);
+        if (!optionalAddress.isPresent()) {
+            return null;
+        }
+        return optionalAddress.get();
+    }
+
+    @Override
+    public Customer createCustomer(CustomerParam param) {
+        Address address = modelMapper.map(param.getAddressParam(), Address.class);
+        addressRepository.save(address);
+        Customer customer = Customer.builder()
+                .name(param.getName())
+                .email(param.getEmail())
+                .birthday(param.getBirthday())
+                .address(address)
+                .phoneNumber(param.getPhoneNumber())
+                .build();
+        customerRepository.save(customer);
+
+
+        List<CardAccount> cardAccounts = param.getCardAccountList().stream().map(c -> {
+            CardAccount cardAccount = CardAccount.builder()
+                    .customer(customer)
+                    .cardNumber(c.getCardNumber())
+                    .ownerName(c.getOwnerName())
+                    .vendor(c.getVendor())
+                    .build();
+            customer.addCardAccount(cardAccount);
+            return cardAccount;
+        }).collect(Collectors.toList());
+        cardAccountRepository.saveAll(cardAccounts);
+
+        List<Pet> pets = param.getPetList().stream().map(p -> {
+            Pet pet = Pet.builder()
+                    .customer(customer)
+                    .birthday(p.getBirthday())
+                    .name(p.getName())
+                    .build();
+            customer.addPet(pet);
+            return pet;
+        }).collect(Collectors.toList());
+        petRepository.saveAll(pets);
+
+        return customer;
+    }
+
+    @Override
+    public Customer updateCustomer(Long id, CustomerParam param) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
             return null;
         }
         Customer customer = optionalCustomer.get();
-        CustomerDto customerDto = modelMapper.map(customer, CustomerDto.class);
-        return customerDto;
+        customer.setBirthday(param.getBirthday());
+        customer.setName(param.getName());
+        customer.setEmail(param.getEmail());
+        customer.setPassword(param.getPassword());
+        customer.setPhoneNumber(param.getPhoneNumber());
+        return customer;
     }
 
     @Override
-    public CustomerDto createCustomer(CustomerParam param) {
-        Customer customer = modelMapper.map(param, Customer.class);
-
-        Customer createdCustomer = customerRepository.save(customer);
-        return modelMapper.map(createdCustomer, CustomerDto.class);
-
-    }
-
-    @Override
-    public Customer updateCustomer(Customer customer) {
-        return null;
-    }
-
-    @Override
-    public void deleteCustomer(Customer customer) {
-
-    }
-
-    @Override
-    public AddressDto addAddress(AddressParam param, Long customerId) {
-        Address address = modelMapper.map(param, Address.class);
-        Address createdAddress = addressRepository.save(address);
-
-        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+    public Long deleteCustomer(Long id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
             return null;
         }
-        Customer customer = optionalCustomer.get();
-
-        customer.setAddress(createdAddress);
-//        customerRepository.save(customer);
-        AddressDto addressDto = modelMapper.map(createdAddress, AddressDto.class);
-        return addressDto;
-    }
-    @Override
-    public List<CardAccountDto> addCard(List<CardAccountParam> param, Long customerId) {
-        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
-        if (!optionalCustomer.isPresent()) {
-            return null;
-        }
-        Customer customer = optionalCustomer.get();
-        List<CardAccount> cardAccountList = param.stream().map(p -> {
-            CardAccount cardAccount = modelMapper.map(p, CardAccount.class);
-            cardAccount.setCustomer(customer);
-            return cardAccount;
-        }).collect(Collectors.toList());
-        List<CardAccount> createdCardAccount = cardAccountRepository.saveAll(cardAccountList);
-        return createdCardAccount.stream().map(c -> modelMapper.map(c, CardAccountDto.class)).collect(Collectors.toList());
+        addressRepository.delete(optionalCustomer.get().getAddress());
+        customerRepository.delete(optionalCustomer.get());
+        return id;
     }
 
     @Override
@@ -110,17 +132,16 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public AddressDto changeAddress(Long addressId, AddressParam addressParam) {
+    public Address updateAddress(Long addressId, AddressParam addressParam) {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
         if (!optionalAddress.isPresent()) {
             return null;
         }
-
         Address address = optionalAddress.get();
         address.setCity(addressParam.getCity());
         address.setStreet(addressParam.getStreet());
         address.setZipcode(addressParam.getZipcode());
-        return modelMapper.map(address, AddressDto.class);
+        return address;
     }
 
     @Override
@@ -134,6 +155,25 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
+    public CardAccount getCard(Long id) {
+        Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(id);
+        if (!optionalCardAccount.isPresent()) {
+            return null;
+        }
+
+        return optionalCardAccount.get();
+    }
+
+    @Override
+    public Pet getPet(Long id) {
+        Optional<Pet> optionalPet = petRepository.findById(id);
+        if (!optionalPet.isPresent()) {
+            return null;
+        }
+        return optionalPet.get();
+    }
+
+    @Override
     public Long deleteCard(Long cardId) {
         Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
         if (!optionalCardAccount.isPresent()) {
@@ -144,7 +184,7 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public PetDto changePet(Long petId, PetParam petParam) {
+    public Pet updatePet(Long petId, PetParam petParam) {
         Optional<Pet> optionalPet = petRepository.findById(petId);
         if (!optionalPet.isPresent()) {
             return null;
@@ -152,9 +192,9 @@ public class CustomerServiceImpl implements CustomerService{
 
         Pet pet = optionalPet.get();
         pet.setPetType(petParam.getPetType());
-        pet.setAge(petParam.getAge());
+        pet.setBirthday(petParam.getBirthday());
         pet.setName(petParam.getName());
-        return modelMapper.map(pet, PetDto.class);
+        return pet;
     }
 
     @Override
@@ -168,21 +208,20 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public Page<CustomerDto> queryCustomers(Pageable pageable, CustomerSearchCondition condition) {
+    public Page<Customer> queryCustomers(Pageable pageable, CustomerSearchCondition condition) {
         return customerRepository.findByCustomerParam(pageable, condition);
     }
 
     @Override
-    public CardAccountDto changeCardAccount(Long cardId, CardAccountParam cardAccountParam) {
+    public CardAccount updateCard(Long cardId, CardAccountParam cardAccountParam) {
         Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
         if (!optionalCardAccount.isPresent()) {
             return null;
         }
-
         CardAccount cardAccount = optionalCardAccount.get();
         cardAccount.setCardNumber(cardAccountParam.getCardNumber());
         cardAccount.setVendor(cardAccountParam.getVendor());
         cardAccount.setOwnerName(cardAccountParam.getOwnerName());
-        return modelMapper.map(cardAccount, CardAccountDto.class);
+        return cardAccount;
     }
 }

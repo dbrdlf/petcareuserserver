@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 
 @Getter
 @AllArgsConstructor
@@ -16,5 +17,5 @@ import javax.persistence.*;
 public class PetParam {
     private String name;
     private PetType petType;
-    private Integer age;
+    private LocalDate birthday;
 }
