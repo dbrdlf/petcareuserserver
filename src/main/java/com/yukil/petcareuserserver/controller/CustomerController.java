@@ -15,15 +15,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.*;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -57,10 +55,14 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity createCustomer(@RequestBody CustomerParam customerParam, Errors errors) {
+    public ResponseEntity createCustomer(@RequestBody CustomerParam customerParam, Errors errors, HttpServletRequest request) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
+        String header = request.getHeader("X-Forwarded-For");
+        String headerport = request.getHeader("X-Forwarded-port");
+        System.out.println("header = " + header);
+        System.out.println("headerport = " + headerport);
         Customer customer = customerService.createCustomer(customerParam);
         CustomerDto customerDto = customerDtoAssembler.toModel(customer);
         WebMvcLinkBuilder selfLinkBuilder = linkTo(CustomerController.class).slash(customerDto.getId());
@@ -94,6 +96,13 @@ public class CustomerController {
         customerResource.add(Link.of("docs/index.html#resources-delete-customer", "profile"));
 
         return ResponseEntity.ok(customerResource);
+    }
+
+    @GetMapping("/{id}/pet")
+    public ResponseEntity queryPet(@PathVariable("id") Long id){
+        List<Pet> petList = customerService.queryPet(id);
+        CollectionModel<PetDto> petDtos = petDtoAssembler.toCollectionModel(petList);
+        return ResponseEntity.ok(petDtos);
     }
 
 

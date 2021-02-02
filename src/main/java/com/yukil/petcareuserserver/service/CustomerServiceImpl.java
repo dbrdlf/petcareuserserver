@@ -89,6 +89,16 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
+    public List<Pet> queryPet(Long id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
+        if (!optionalCustomer.isPresent()) {
+            return null;
+        }
+        Customer customer = optionalCustomer.get();
+        return customer.getPetList();
+    }
+
+    @Override
     public Customer updateCustomer(Long id, CustomerParam param) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {

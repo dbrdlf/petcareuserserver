@@ -32,7 +32,7 @@ public class CustomerDtoAssembler extends RepresentationModelAssemblerSupport<Cu
     @Override
     public CustomerDto toModel(Customer entity) {
         CustomerDto customerDto = instantiateModel(entity);
-        customerDto.add(linkTo(methodOn(CustomerController.class).getCustomer(entity.getId())).withSelfRel());
+//        customerDto.add(linkTo(methodOn(CustomerController.class).getCustomer(entity.getId())).withSelfRel());
 
         customerDto = CustomerDto.builder()
                 .address(toAddressDto(entity.getAddress()))

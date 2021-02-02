@@ -36,4 +36,6 @@ public interface CustomerService {
     Page<Customer> queryCustomers(Pageable pageable, CustomerSearchCondition condition);
 
     Pet getPet(Long id);
+
+    List<Pet> queryPet(Long id);
 }

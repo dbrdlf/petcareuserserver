@@ -133,13 +133,13 @@ class CustomerControllerTest {
     public void createCustomerTest() throws Exception {
         CustomerParam customerParam = CustomerParam.builder()
                 .name("lee")
-                .email("dbrdlf61@gmail.com")
+                .email("lee@gmail.com")
                 .birthday(LocalDate.of(1984, 5, 30))
                 .password("1234")
                 .addressParam(AddressParam.builder().city("ssss").street("2222").zipcode(1111).build())
                 .cardAccountList(Arrays.asList(CardAccountParam.builder().cardNumber("1234-1234-1234-1234").ownerName("lee").vendor(Vendor.KB).build()))
                 .petList(Arrays.asList(PetParam.builder().petType(PetType.CAT).birthday(LocalDate.of(2018,12,8)).name("moong-chi").build()))
-                .phoneNumber("010-6504-6334")
+                .phoneNumber("010-1234-1234")
                 .build();
         mockMvc.perform(post("/api/customer")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -749,6 +749,21 @@ class CustomerControllerTest {
 
         ;
     }
+
+    @Test
+    @DisplayName("반려동물 목록 조회")
+    public void queryPet() throws Exception{
+        Customer customer = createCustomer();
+        createPet(customer);
+        mockMvc.perform(get("/api/customer/{id}/pet", customer.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+        ).andDo(print())
+                .andExpect(status().isOk());
+
+
+    }
+
     @Test
     @DisplayName("반려동물 정보 삭제(없는 반려동물)")
     public void deleteCustomerPetNotFound() throws Exception {
@@ -775,7 +790,7 @@ class CustomerControllerTest {
                 .param("page", "0")
                 .param("size", "20")
                 .param("sort", "name,DESC")
-//                .param("name", "yukil_1")
+//                .param("name", "lee_1")
         ).andDo(print())
                 .andExpect(status().isOk())
                 .andDo(document("query-customers",
@@ -850,8 +865,8 @@ class CustomerControllerTest {
                 .build();
         Address savedAddress = addressRepository.save(address);
         Customer customer = Customer.builder()
-                .name("yukil_" + i)
-                .email("dbrdlf61@gmail.com")
+                .name("lee_" + i)
+                .email("lee@gmail.com")
                 .password("pass")
                 .address(address)
                 .phoneNumber("010-1234-1234")
@@ -873,7 +888,7 @@ class CustomerControllerTest {
         Address savedAddress = addressRepository.save(address);
         Customer customer = Customer.builder()
                 .name("lee")
-                .email("dbrdlf61@gmail.com")
+                .email("lee@gmail.com")
                 .password("pass")
                 .phoneNumber("010-1234-1234")
                 .address(savedAddress)
@@ -910,6 +925,13 @@ class CustomerControllerTest {
                 .petType(PetType.CAT)
                 .name("moong-chi")
                 .build();
-        return petRepository.save(pet);
+        Pet pet2 = Pet.builder()
+                .birthday(LocalDate.of(2018,12,10))
+                .customer(customer)
+                .petType(PetType.DOG)
+                .name("dog")
+                .build();
+        List<Pet> pets = petRepository.saveAll(Arrays.asList(pet, pet2));
+        return pets.get(0);
     }
 }

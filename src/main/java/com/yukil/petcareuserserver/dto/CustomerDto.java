@@ -31,11 +31,4 @@ public class CustomerDto extends RepresentationModel<CustomerDto> {
     private List<CardAccountDto> cardAccounts = new ArrayList<>();
     private List<PetDto> pets = new ArrayList<>();
 
-//    public Integer getAge() {
-//        if (birthday == null) {
-//            return 0;
-//        }
-//        Period period = birthday.until(LocalDate.now());
-//        return period.getYears();
-//    }
 }

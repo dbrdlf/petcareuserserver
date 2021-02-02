@@ -35,6 +35,11 @@ public class Customer {
     @Builder.Default
     private List<Pet> petList = new ArrayList<>();
 
+    public void changeAddress(Address address) {
+        address.setCustomer(this);
+        this.setAddress(address);
+    }
+
 
     public void addCardAccount(CardAccount cardAccount) {
         cardAccount.setCustomer(this);
