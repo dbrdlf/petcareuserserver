@@ -17,14 +17,19 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
+import org.springframework.security.oauth2.common.util.Jackson2JsonParser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -73,6 +78,8 @@ class CustomerControllerTest {
         createPet(customer);
         //given
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/customer/{id}", customer.getId())
+//                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTI1NjI0MzQsInVzZXJfbmFtZSI6InRlc3QiLCJhdXRob3JpdGllcyI6WyJVU0VSIiwiQURNSU4iXSwianRpIjoiZWQ0ZWVkZjUtY2VkMy00NzIzLWIzMGEtMWMwZTFhMTdlOTMwIiwiY2xpZW50X2lkIjoicGV0LWNhcmUtY2xpZW50Iiwic2NvcGUiOlsicmVhZCJdfQ.jCDEsTv1AZ54V5BSDtT-Wrykku79rr0Bbs5Xj2QVWHI")
                                                         .contentType(MediaType.APPLICATION_JSON)
                                                         .accept(MediaTypes.HAL_JSON)
         )
@@ -933,5 +940,37 @@ class CustomerControllerTest {
                 .build();
         List<Pet> pets = petRepository.saveAll(Arrays.asList(pet, pet2));
         return pets.get(0);
+    }
+
+    private String getBearerToken(boolean needToCreateAccount) throws Exception {
+        return "Bearer" + getAccessToken(needToCreateAccount);
+    }
+
+    private String getAccessToken(boolean needToCreateAccount) throws Exception {
+//        if (needToCreateAccount) {
+//            createAccount();
+//        }
+        ResultActions perform = mockMvc.perform(post("/oauth/token")
+                .with(remoteAddr("localhost", 8090))
+                .with(httpBasic("pet-care-client", "pet-care-secret"))
+                .param("scope", "read")
+                .param("grant_type", "password")
+                .param("username", "test")
+                .param("password", "pass")
+        );
+        String responseBody = perform.andReturn().getResponse().getContentAsString();
+        Jackson2JsonParser parser = new Jackson2JsonParser();
+        return parser.parseMap(responseBody).get("access_token").toString();
+    }
+
+    private static RequestPostProcessor remoteAddr(final String remoteAddr, final int port) { // it's nice to extract into a helper
+        return new RequestPostProcessor() {
+            @Override
+            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request) {
+                request.setRemoteAddr(remoteAddr);
+                request.setRemotePort(port);
+                return request;
+            }
+        };
     }
 }

@@ -1,31 +1,16 @@
 package com.yukil.petcareuserserver.repository.custom.impl;
 
-import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.yukil.petcareuserserver.common.Querydsl4RepositorySupport;
-import com.yukil.petcareuserserver.dto.CustomerDto;
-import com.yukil.petcareuserserver.dto.CustomerParam;
 import com.yukil.petcareuserserver.dto.CustomerSearchCondition;
 import com.yukil.petcareuserserver.entity.Customer;
-import com.yukil.petcareuserserver.entity.QAddress;
-import com.yukil.petcareuserserver.entity.QCardAccount;
-import com.yukil.petcareuserserver.entity.QPet;
 import com.yukil.petcareuserserver.repository.custom.CustomerRepositoryCustom;
-import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.jni.Local;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.yukil.petcareuserserver.entity.QAddress.address;
 import static com.yukil.petcareuserserver.entity.QCardAccount.cardAccount;

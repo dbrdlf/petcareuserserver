@@ -5,6 +5,10 @@ import com.yukil.petcareuserserver.entity.Address;
 import com.yukil.petcareuserserver.entity.CardAccount;
 import com.yukil.petcareuserserver.entity.Customer;
 import com.yukil.petcareuserserver.entity.Pet;
+import com.yukil.petcareuserserver.hateoas.AddressDtoAssembler;
+import com.yukil.petcareuserserver.hateoas.CardAccountDtoAssembler;
+import com.yukil.petcareuserserver.hateoas.CustomerDtoAssembler;
+import com.yukil.petcareuserserver.hateoas.PetDtoAssembler;
 import com.yukil.petcareuserserver.repository.AddressRepository;
 import com.yukil.petcareuserserver.repository.CardAccountRepository;
 import com.yukil.petcareuserserver.repository.CustomerRepository;
@@ -13,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -29,27 +36,32 @@ public class CustomerServiceImpl implements CustomerService{
     private final AddressRepository addressRepository;
     private final CardAccountRepository cardAccountRepository;
     private final PetRepository petRepository;
+    private final CustomerDtoAssembler customerDtoAssembler;
+    private final AddressDtoAssembler addressDtoAssembler;
+    private final PetDtoAssembler petDtoAssembler;
+    private final CardAccountDtoAssembler cardAccountDtoAssembler;
+    private final PagedResourcesAssembler pagedResourcesAssembler;
 
     @Override
-    public Customer getCustomer(Long id) {
+    public CustomerDto getCustomer(Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
             return null;
         }
-        return  optionalCustomer.get();
+        return customerDtoAssembler.toModel(optionalCustomer.get());
     }
 
     @Override
-    public Address getAddress(Long id) {
+    public AddressDto getAddress(Long id) {
         Optional<Address> optionalAddress = addressRepository.findById(id);
         if (!optionalAddress.isPresent()) {
             return null;
         }
-        return optionalAddress.get();
+        return addressDtoAssembler.toModel(optionalAddress.get());
     }
 
     @Override
-    public Customer createCustomer(CustomerParam param) {
+    public CustomerDto createCustomer(CustomerParam param) {
         Address address = modelMapper.map(param.getAddressParam(), Address.class);
         addressRepository.save(address);
         Customer customer = Customer.builder()
@@ -85,21 +97,24 @@ public class CustomerServiceImpl implements CustomerService{
         }).collect(Collectors.toList());
         petRepository.saveAll(pets);
 
-        return customer;
+
+        return customerDtoAssembler.toModel(customer);
     }
 
     @Override
-    public List<Pet> queryPet(Long id) {
+    public CollectionModel<PetDto> queryPet(Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
             return null;
         }
         Customer customer = optionalCustomer.get();
-        return customer.getPetList();
+        CollectionModel<PetDto> petDtos = petDtoAssembler.toCollectionModel(customer.getPetList());
+
+        return petDtos;
     }
 
     @Override
-    public Customer updateCustomer(Long id, CustomerParam param) {
+    public CustomerDto updateCustomer(Long id, CustomerParam param) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
             return null;
@@ -110,7 +125,7 @@ public class CustomerServiceImpl implements CustomerService{
         customer.setEmail(param.getEmail());
         customer.setPassword(param.getPassword());
         customer.setPhoneNumber(param.getPhoneNumber());
-        return customer;
+        return customerDtoAssembler.toModel(customer);
     }
 
     @Override
@@ -142,7 +157,7 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public Address updateAddress(Long addressId, AddressParam addressParam) {
+    public AddressDto updateAddress(Long addressId, AddressParam addressParam) {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
         if (!optionalAddress.isPresent()) {
             return null;
@@ -151,7 +166,7 @@ public class CustomerServiceImpl implements CustomerService{
         address.setCity(addressParam.getCity());
         address.setStreet(addressParam.getStreet());
         address.setZipcode(addressParam.getZipcode());
-        return address;
+        return addressDtoAssembler.toModel(address);
     }
 
     @Override
@@ -165,22 +180,22 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public CardAccount getCard(Long id) {
+    public CardAccountDto getCard(Long id) {
         Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(id);
         if (!optionalCardAccount.isPresent()) {
             return null;
         }
 
-        return optionalCardAccount.get();
+        return cardAccountDtoAssembler.toModel(optionalCardAccount.get());
     }
 
     @Override
-    public Pet getPet(Long id) {
+    public PetDto getPet(Long id) {
         Optional<Pet> optionalPet = petRepository.findById(id);
         if (!optionalPet.isPresent()) {
             return null;
         }
-        return optionalPet.get();
+        return petDtoAssembler.toModel(optionalPet.get());
     }
 
     @Override
@@ -194,7 +209,7 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public Pet updatePet(Long petId, PetParam petParam) {
+    public PetDto updatePet(Long petId, PetParam petParam) {
         Optional<Pet> optionalPet = petRepository.findById(petId);
         if (!optionalPet.isPresent()) {
             return null;
@@ -204,7 +219,7 @@ public class CustomerServiceImpl implements CustomerService{
         pet.setPetType(petParam.getPetType());
         pet.setBirthday(petParam.getBirthday());
         pet.setName(petParam.getName());
-        return pet;
+        return petDtoAssembler.toModel(pet);
     }
 
     @Override
@@ -218,12 +233,13 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
-    public Page<Customer> queryCustomers(Pageable pageable, CustomerSearchCondition condition) {
-        return customerRepository.findByCustomerParam(pageable, condition);
+    public PagedModel<CustomerDto> queryCustomers(Pageable pageable, CustomerSearchCondition condition) {
+        Page<Customer> customerPage = customerRepository.findByCustomerParam(pageable, condition);
+        return pagedResourcesAssembler.toModel(customerPage, customerDtoAssembler);
     }
 
     @Override
-    public CardAccount updateCard(Long cardId, CardAccountParam cardAccountParam) {
+    public CardAccountDto updateCard(Long cardId, CardAccountParam cardAccountParam) {
         Optional<CardAccount> optionalCardAccount = cardAccountRepository.findById(cardId);
         if (!optionalCardAccount.isPresent()) {
             return null;
@@ -232,6 +248,6 @@ public class CustomerServiceImpl implements CustomerService{
         cardAccount.setCardNumber(cardAccountParam.getCardNumber());
         cardAccount.setVendor(cardAccountParam.getVendor());
         cardAccount.setOwnerName(cardAccountParam.getOwnerName());
-        return cardAccount;
+        return cardAccountDtoAssembler.toModel(cardAccount);
     }
 }

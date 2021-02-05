@@ -7,35 +7,37 @@ import com.yukil.petcareuserserver.entity.Customer;
 import com.yukil.petcareuserserver.entity.Pet;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.PagedModel;
 
 import java.util.List;
 
 public interface CustomerService {
-    Customer getCustomer(Long id);
+    CustomerDto getCustomer(Long id);
 
-    Address getAddress(Long id);
-    Customer createCustomer(CustomerParam param);
-    Customer updateCustomer(Long id, CustomerParam param);
+    AddressDto getAddress(Long id);
+    CustomerDto createCustomer(CustomerParam param);
+    CustomerDto updateCustomer(Long id, CustomerParam param);
     Long deleteCustomer(Long id);
 
-    CardAccount getCard(Long id);
+    CardAccountDto getCard(Long id);
     List<PetDto> addPet(List<PetParam> param, Long customerId);
 
-    Address updateAddress(Long addressId, AddressParam addressParam);
+    AddressDto updateAddress(Long addressId, AddressParam addressParam);
 
     Long deleteAddress(Long addressId);
 
-    CardAccount updateCard(Long cardId, CardAccountParam cardAccountParam);
+    CardAccountDto updateCard(Long cardId, CardAccountParam cardAccountParam);
 
     Long deleteCard(Long cardId);
 
-    Pet updatePet(Long petId, PetParam petParam);
+    PetDto updatePet(Long petId, PetParam petParam);
 
     Long deletePet(Long petId);
 
-    Page<Customer> queryCustomers(Pageable pageable, CustomerSearchCondition condition);
+    PagedModel<CustomerDto> queryCustomers(Pageable pageable, CustomerSearchCondition condition);
 
-    Pet getPet(Long id);
+    PetDto getPet(Long id);
 
-    List<Pet> queryPet(Long id);
+    CollectionModel<PetDto> queryPet(Long id);
 }

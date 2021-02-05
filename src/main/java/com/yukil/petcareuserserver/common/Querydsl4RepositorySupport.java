@@ -83,4 +83,5 @@ public abstract class Querydsl4RepositorySupport {
         JPAQuery countResult = countQuery.apply(getQueryFactory());
         return PageableExecutionUtils.getPage(content, pageable,
                 countResult::fetchCount);
-    } }
+    }
+}
