@@ -13,13 +13,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -35,6 +41,11 @@ public class CustomerController {
     private final CardAccountDtoAssembler cardAccountDtoAssembler;
     private final PetDtoAssembler petDtoAssembler;
     private final PagedResourcesAssembler<Customer> pagedResourcesAssembler;
+
+    @GetMapping("/test")
+    public ResponseEntity test() {
+        return ResponseEntity.ok("test");
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity getCustomer(@PathVariable("id") Long id) {
@@ -201,6 +212,12 @@ public class CustomerController {
         return ResponseEntity.ok(petDto);
     }
 
+    @GetMapping("/test")
+    public ResponseEntity testQuery() {
+        customerService.testQuery();
+        return ResponseEntity.ok("OK");
+    }
+
     @DeleteMapping("/pet/{id}")
     public ResponseEntity deletePet(
                                      @PathVariable("id") Long id
@@ -230,6 +247,14 @@ public class CustomerController {
         pagedModel.add(linkTo(CustomerController.class).withRel("query-customers"));
         return ResponseEntity.ok(pagedModel);
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map error(ConstraintViolationException e) {
+        List<String> collect = e.getConstraintViolations().stream().map(c -> c.getMessage()).collect(Collectors.toList());
+        return Collections.singletonMap("error", collect);
+    }
+
 
     public List<CardAccountDto> getAllCard() {
         return null;

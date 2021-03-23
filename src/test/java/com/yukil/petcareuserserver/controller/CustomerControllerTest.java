@@ -863,6 +863,16 @@ class CustomerControllerTest {
 
     }
 
+    @Test
+    @DisplayName("byte연산테스트")
+    public void testQuery() throws Exception{
+        //given
+        mockMvc.perform(get("/api/customer/test")).andDo(print());
+        //when
+
+        //then
+    }
+
     private Customer createCustomer(int i) {
         Address address = Address.builder()
 //                .customer(customer)
@@ -973,4 +983,6 @@ class CustomerControllerTest {
             }
         };
     }
+
+
 }

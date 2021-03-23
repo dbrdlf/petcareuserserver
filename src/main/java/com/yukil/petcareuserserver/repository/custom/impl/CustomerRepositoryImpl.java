@@ -1,6 +1,8 @@
 package com.yukil.petcareuserserver.repository.custom.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.yukil.petcareuserserver.common.Querydsl4RepositorySupport;
 import com.yukil.petcareuserserver.dto.CustomerSearchCondition;
 import com.yukil.petcareuserserver.entity.Customer;
@@ -39,6 +41,7 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
 
         return applyPagination(pageable, query -> query
                 .selectFrom(customer)
+
                 .leftJoin(customer.address, address)
                 .leftJoin(customer.cardAccountList, cardAccount)
                 .leftJoin(customer.petList, pet)
@@ -48,6 +51,12 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
                         ageLoe(condition.getAgeLoe())
                 )
         );
+    }
+
+    @Override
+    public void testQuery() {
+        BooleanBuilder builder = new BooleanBuilder();
+        select(customer.id).from(customer).where(Expressions.booleanTemplate("{0}  {1} > 0", customer.id, "2")).fetch();
     }
 
     private BooleanExpression ageLoe(Integer ageLoe) {
@@ -77,4 +86,7 @@ public class CustomerRepositoryImpl extends Querydsl4RepositorySupport implement
     private LocalDate getBirthday(Integer age) {
         return LocalDate.of(LocalDate.now().getYear() - age, LocalDate.now().getMonth(), LocalDate.now().getDayOfMonth());
     }
+
+
+
 }
