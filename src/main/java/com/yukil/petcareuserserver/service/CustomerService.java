@@ -40,4 +40,6 @@ public interface CustomerService {
     PetDto getPet(Long id);
 
     CollectionModel<PetDto> queryPet(Long id);
+
+    void testQuery();
 }

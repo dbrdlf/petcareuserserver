@@ -9,4 +9,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface CustomerRepositoryCustom {
     Page<Customer> findByCustomerParam(Pageable pageable, CustomerSearchCondition customerSearchCondition);
+    void testQuery();
 }

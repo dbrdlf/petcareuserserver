@@ -114,6 +114,11 @@ public class CustomerServiceImpl implements CustomerService{
     }
 
     @Override
+    public void testQuery() {
+        customerRepository.testQuery();
+    }
+
+    @Override
     public CustomerDto updateCustomer(Long id, CustomerParam param) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         if (!optionalCustomer.isPresent()) {
