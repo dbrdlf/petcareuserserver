@@ -46,6 +46,14 @@ public class CustomerController {
     public ResponseEntity test() {
         return ResponseEntity.ok("test");
     }
+    @GetMapping("/test2")
+    public ResponseEntity test2() {
+        return ResponseEntity.ok("test");
+    }
+@GetMapping("/test3")
+    public ResponseEntity test3() {
+        return ResponseEntity.ok("test");
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity getCustomer(@PathVariable("id") Long id) {
